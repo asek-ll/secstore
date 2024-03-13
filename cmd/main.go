@@ -20,7 +20,7 @@ func main() {
 	var options Options
 	p := flags.NewParser(&options, flags.Default)
 	p.CommandHandler = func(command flags.Commander, args []string) error {
-		store, err := store.GetDefaultStore()
+		store, err := store.NewProvider().GetDefaultStore()
 		if err != nil {
 			return err
 		}

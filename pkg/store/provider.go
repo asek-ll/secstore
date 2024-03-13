@@ -16,7 +16,23 @@ type config struct {
 	GpgConfig *adapter.GPGConfig `json:"gpgConfig"`
 }
 
-func readConfig() (*config, error) {
+type provider struct {
+	config       *config
+	configLoaded bool
+}
+
+func NewProvider() provider {
+	return provider{
+		config:       nil,
+		configLoaded: false,
+	}
+}
+
+func (ctx provider) readConfig() (*config, error) {
+	if ctx.configLoaded {
+		return ctx.config, nil
+	}
+
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return nil, err
@@ -41,26 +57,42 @@ func readConfig() (*config, error) {
 		return nil, err
 	}
 
+	ctx.config = &conf
+	ctx.configLoaded = true
+
 	return &conf, nil
 }
 
-func GetDefaultStore() (Store, error) {
-	config, err := readConfig()
+func (p provider) GetStoreWithEngine(engine string) (Store, error) {
+	switch engine {
+	case "macos-security":
+		return adapter.MacSecurityAdapter{}, nil
+	case "gpg":
+		config, err := p.readConfig()
+		if err != nil {
+			return nil, err
+		}
+		if config == nil {
+			return nil, fmt.Errorf("No gpg config present")
+		}
+		store, err := adapter.NewGPGAdapter(config.GpgConfig)
+		if err != nil {
+			return nil, err
+		}
+
+		return store, nil
+	}
+
+	return nil, fmt.Errorf("No security store adapter defined for engine %s", engine)
+}
+
+func (p provider) GetDefaultStore() (Store, error) {
+	config, err := p.readConfig()
 	if err != nil {
 		return nil, err
 	}
-	if config != nil {
-		switch config.Engine {
-		case "macos-security":
-			return adapter.MacSecurityAdapter{}, nil
-		case "gpg":
-			store, err := adapter.NewGPGAdapter(config.GpgConfig)
-			if err != nil {
-				return nil, err
-			}
-
-			return store, nil
-		}
+	if config != nil && config.Engine != "" {
+		return p.GetStoreWithEngine(config.Engine)
 	}
 	if runtime.GOOS == "darwin" {
 		return adapter.MacSecurityAdapter{}, nil
