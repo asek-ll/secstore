@@ -1,6 +1,7 @@
 package adapter
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -47,14 +48,14 @@ func isGPGKeyExists(key string) (bool, error) {
 
 func (a GPGAdapter) ensureConfig() error {
 	if a.KeyId == "" {
-		return fmt.Errorf("GPG key not specified")
+		return errors.New("GPG key not specified")
 	}
 	e, err := isGPGKeyExists(a.KeyId)
 	if err != nil {
 		return err
 	}
 	if !e {
-		return fmt.Errorf("GPG key not exists")
+		return errors.New("GPG key not exists")
 	}
 
 	_, err = os.Stat(a.Path)
@@ -72,6 +73,10 @@ func (a GPGAdapter) Load(key string) (string, error) {
 	}
 
 	fullPath := path.Join(a.Path, key)
+
+	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
+		return "", &NoExistsKeyError{key: key}
+	}
 
 	cmd := exec.Command("gpg", "--decrypt", fullPath)
 
