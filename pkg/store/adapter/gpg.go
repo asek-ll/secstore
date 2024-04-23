@@ -126,3 +126,18 @@ func (a GPGAdapter) Delete(key string) error {
 	}
 	return nil
 }
+
+func (a GPGAdapter) List() ([]string, error) {
+	entries, err := os.ReadDir(a.Path)
+	if err != nil {
+		return nil, err
+	}
+	var names []string
+	for _, e := range entries {
+		if !e.IsDir() {
+			names = append(names, e.Name())
+		}
+	}
+
+	return names, nil
+}

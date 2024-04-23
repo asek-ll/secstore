@@ -14,6 +14,7 @@ type Options struct {
 	GetSecretCmd    cmd.GetSecretCommand    `command:"get"`
 	SetSecretCmd    cmd.SetSecretCommand    `command:"set"`
 	RemoveSecretCmd cmd.RemoveSecretCommand `command:"remove"`
+	ListSecretsCmd  cmd.ListSecretsCommand  `command:"list"`
 }
 
 func main() {
