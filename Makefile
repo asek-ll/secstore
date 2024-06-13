@@ -1,6 +1,12 @@
-.PHONY: build
-build:
+.PHONY: secstore
+secstore:
 	go build -o secstore cmd/main.go 
 
-install:
+.PHONY: install
+install: secstore
 	cp ./secstore ~/bin/secstore
+
+
+.PHONY: clean
+clean:
+	rm ./secstore
