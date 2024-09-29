@@ -67,6 +67,8 @@ func (p provider) GetStoreWithEngine(engine string) (Store, error) {
 	switch engine {
 	case "macos-security":
 		return adapter.MacSecurityAdapter{}, nil
+	case "secret-tool":
+		return adapter.SecretToolAdapter{}, nil
 	case "gpg":
 		config, err := p.readConfig()
 		if err != nil {
